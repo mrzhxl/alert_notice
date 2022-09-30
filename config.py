@@ -1,0 +1,34 @@
+class Config(object):
+    # MYSQL CONFIG
+    DATABASE_HOST='xxxx'
+    DATABASE_PORT='3306'
+    DATABASE_USER='alertuser'
+    DATABASE_PASSWORD='FhkDXVtd'
+    DATABASE_NAME='alert_notice'
+    SQLALCHEMY_DATABASE_URI = 'mysql://{USER}:{PASSWORD}@{HOST}:{PROT}/{DATABASE}'.format(USER=DATABASE_USER,PASSWORD=DATABASE_PASSWORD,HOST=DATABASE_HOST,PROT=DATABASE_PORT,DATABASE=DATABASE_NAME)
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_SIZE = 128      # 线程池大小
+    SQLALCHEMY_POOL_TIMEOUT = 90    # 超时时间
+    SQLALCHEMY_POOL_RECYCLE = 3     # 空闲连接自动回收时间
+    SQLALCHEMY_MAX_OVERFLOW = 128   # 控制在连接池达到最大值后可以创建的连接数。
+
+    FEISHU_BOT = 'https://open.feishu.cn/open-apis/bot/v2/hook/xxxxx'
+    
+
+
+class TestConfig(Config):
+    DEBUG = True
+    # MYSQL TEST CONFIG
+    DATABASE_HOST='xxxx'
+    DATABASE_PORT='3306'
+    DATABASE_USER='alertnotice'
+    DATABASE_PASSWORD='alert_notice'
+    DATABASE_NAME='alert_notice'
+    SQLALCHEMY_DATABASE_URI = 'mysql://{USER}:{PASSWORD}@{HOST}:{PROT}/{DATABASE}'.format(USER=DATABASE_USER,PASSWORD=DATABASE_PASSWORD,HOST=DATABASE_HOST,PROT=DATABASE_PORT,DATABASE=DATABASE_NAME)
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_SIZE = 128      # 线程池大小
+    SQLALCHEMY_POOL_TIMEOUT = 90    # 超时时间
+    SQLALCHEMY_POOL_RECYCLE = 3     # 空闲连接自动回收时间
+    SQLALCHEMY_MAX_OVERFLOW = 128   # 控制在连接池达到最大值后可以创建的连接数。
+
+    FEISHU_BOT = 'https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxx'

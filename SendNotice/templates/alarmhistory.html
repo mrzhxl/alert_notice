@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>report</title>
+</head>
+<h1>告警记录</h1>
+    <body>
+        <table border="1">
+            <tr bgcolor="#0492c2">
+              <td>事件id</td>
+              <td>事件名称</td>
+              <td>主机名</td>
+              <td>主机IP</td>
+              <td>告警等级</td>
+              <td>告警信息</td>
+              <td>告警时间</td>
+              <td>恢复时间</td>
+              <td>持续时间</td>
+              <td>告警状态</td>
+              <td>确认</td>
+            </tr>
+            {% for data in datalist %}
+                {% if data.status == '告警' %}
+                    <tr bgcolor="#f44336">
+                        <td>{{data.eventid}}</td>
+                        <td>{{data.alertname}}</td>
+                        <td>{{data.hostname}}</td>
+                        <td>{{data.ip}}</td>
+                        <td>{{data.level}}</td>
+                        <td>{{data.msg}}</td>
+                        <td>{{data.startAt}}</td>
+                        <td>{{data.endAt}}</td>
+                        <td>{{data.perAt}}</td>
+                        <td>{{data.status}}</td>
+                        <td><a href="{{ url_for('feishu.event_confirm',eventid=data.eventid) }}">ok</a></td>
+                    </tr>
+                {% elif data.status == '恢复' %}
+                    <tr bgcolor="#b2e342">
+                        <td>{{data.eventid}}</td>
+                        <td>{{data.alertname}}</td>
+                        <td>{{data.hostname}}</td>
+                        <td>{{data.ip}}</td>
+                        <td>{{data.level}}</td>
+                        <td>{{data.msg}}</td>
+                        <td>{{data.startAt}}</td>
+                        <td>{{data.endAt}}</td>
+                        <td>{{data.perAt}}</td>
+                        <td >{{data.status}}</td>
+                    </tr>
+                {% elif data.status == '知悉' %}
+                    <tr bgcolor="#ffa500">
+                        <td>{{data.eventid}}</td>
+                        <td>{{data.alertname}}</td>
+                        <td>{{data.hostname}}</td>
+                        <td>{{data.ip}}</td>
+                        <td>{{data.level}}</td>
+                        <td>{{data.msg}}</td>
+                        <td>{{data.startAt}}</td>
+                        <td>{{data.endAt}}</td>
+                        <td>{{data.perAt}}</td>
+                        <td >{{data.status}}</td>
+                    </tr>                
+                {% endif%}
+              {% endfor %}
+            </table>
+            <p>默认显示100条，<a href="{{ url_for('feishu.get_alarm_history',num=1000) }}">显示更多</a></p>
+    </body>
+</html>
