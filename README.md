@@ -25,7 +25,7 @@ alert_notice
 ```
 ## 使用方法
 ```bash
-git clone 
+git clone https://github.com/mrzhxl/alert_notice.git
 cd alert_notice
 # 安装依赖包
 pip3 install -r requirements.txt
