@@ -72,74 +72,78 @@ def event_confirm(eventid):
 
 @feishu.post("/AlertFeishu")
 def alert_feishu():
-    data = request.get_json()
-    print(data)
-    AlertName = data.get('alerts')[0].get('labels').get('alertname')
-    Hostname = data.get('alerts')[0].get('labels').get('hostname')
-    Ip = data.get('alerts')[0].get('labels').get('instance')
-    Value = data.get('alerts')[0].get('annotations').get('value')
-    Level = data.get('alerts')[0].get('labels').get('severity')
-    Msg = data.get('alerts')[0].get('annotations').get('description')
+    try:
+        data = request.get_json()
+        print(data)
+        for alert in data.get('alerts'):
+            AlertName = alert.get('labels').get('alertname')
+            Hostname = alert.get('labels').get('hostname')
+            Ip = alert.get('labels').get('instance')
+            Value = alert.get('annotations').get('value')
+            Level = alert.get('labels').get('severity')
+            Msg = alert.get('annotations').get('description')
 
-    # start时间转换
-    # 判断报警、恢复状态发送不同模版
-    # 报警
-    if data.get('status') == 'firing':
-        StartsAt = utc_to_cst(data.get('alerts')[0].get('startsAt'))
-        # 生成事件id
-        Eventid = int(str(int(hashlib.md5((AlertName+Hostname+Ip+StartsAt).encode('utf-8')).hexdigest(),16))[-6:])
-        # 匹配策略规则是否通过
-        rule_pass = rule.firing_rule(AlertName,Eventid)
-        if rule_pass:
-            # 写入数据库
-            eventlist = Eventlist(
-                hostname=Hostname,
-                ip=Ip,
-                level=Level,
-                status='告警',
-                msg=Msg,
-                startAt=StartsAt,
-                alertname=AlertName,
-                eventid=Eventid
-            )
-            db.session.add(eventlist)
-            db.session.commit()
-            firing_value = render_template('firing.html', **locals())
+            # start时间转换
+            # 判断报警、恢复状态发送不同模版
+            # 报警
+            if alert.get('status') == 'firing':
+                StartsAt = utc_to_cst(alert.get('startsAt'))
+                # 生成事件id
+                Eventid = int(str(int(hashlib.md5((AlertName+Hostname+Ip+StartsAt).encode('utf-8')).hexdigest(),16))[-6:])
+                # 匹配策略规则是否通过
+                rule_pass = rule.firing_rule(AlertName,Eventid)
+                if rule_pass:
+                    # 写入数据库
+                    eventlist = Eventlist(
+                        hostname=Hostname,
+                        ip=Ip,
+                        level=Level,
+                        status='告警',
+                        msg=Msg,
+                        startAt=StartsAt,
+                        alertname=AlertName,
+                        eventid=Eventid
+                    )
+                    db.session.add(eventlist)
+                    db.session.commit()
+                    firing_value = render_template('firing.html', **locals())
+                    # 飞书告警
+                    req = send_feishu(current_app.config.get('FEISHU_BOT'), firing_value)
+                    if req == 200:
+                        print('send feishu ok')
+                    else:
+                        print('send feishu fail')
+                else:
+                    print('no alarm')
 
-            # 飞书告警
-            req = send_feishu(current_app.config.get('FEISHU_BOT'), firing_value)
-            if req == 200:
-                return 'send feishu ok'
-            else:
-                return 'send feishu fail'
-        else:
-            return 'no alarm'
+            # 恢复
+            elif alert.get('status') == 'resolved':
+                StartsAt = utc_to_cst(alert.get('startsAt'))
+                EndAt = utc_to_cst(alert.get('endsAt'))
+                PersistentAt = time_cal(utc_to_cst(alert.get(
+                    'startsAt')), utc_to_cst(alert.get('endsAt')))
+                # 生成事件id
+                Eventid = int(str(int(hashlib.md5((AlertName+Hostname+Ip+StartsAt).encode('utf-8')).hexdigest(),16))[-6:])
 
-    # 恢复
-    elif data.get('status') == 'resolved':
-        StartsAt = utc_to_cst(data.get('alerts')[0].get('startsAt'))
-        EndAt = utc_to_cst(data.get('alerts')[0].get('endsAt'))
-        PersistentAt = time_cal(utc_to_cst(data.get('alerts')[0].get(
-            'startsAt')), utc_to_cst(data.get('alerts')[0].get('endsAt')))
-        # 生成事件id
-        Eventid = int(str(int(hashlib.md5((AlertName+Hostname+Ip+StartsAt).encode('utf-8')).hexdigest(),16))[-6:])
-
-        rule_pass = rule.resolved_rule(AlertName, Eventid)
-        if rule_pass:
-            # 查询数据库中告警记录
-            for eventlist in Eventlist.query.filter(Eventlist.eventid == Eventid).all():
-                # 更新告警记录
-                eventlist.status = '恢复'
-                eventlist.endAt = EndAt
-                eventlist.perAt = PersistentAt
-                db.session.commit()
-            resolved_value = render_template('resolved.html', **locals())
-
-            # 飞书告警
-            req = send_feishu(current_app.config.get('FEISHU_BOT'), resolved_value)
-            if req == 200:
-                return 'send feishu ok'
-            else:
-                return 'send feishu fail'
-        else:
-            return 'no data'
+                rule_pass = rule.resolved_rule(AlertName, Eventid)
+                if rule_pass:
+                    # 查询数据库中告警记录
+                    for eventlist in Eventlist.query.filter(Eventlist.eventid == Eventid).all():
+                        # 更新告警记录
+                        eventlist.status = '恢复'
+                        eventlist.endAt = EndAt
+                        eventlist.perAt = PersistentAt
+                        db.session.commit()
+                    resolved_value = render_template('resolved.html', **locals())
+                    # 飞书告警
+                    req = send_feishu(current_app.config.get('FEISHU_BOT'), resolved_value)
+                    if req == 200:
+                        print('send feishu ok')
+                    else:
+                        print('send feishu fail')
+                else:
+                    print('no data')
+        return jsonify({"code": 200, "message": "success"})
+    except Exception as e:
+        print(e)
+        return jsonify({"code": 403, "message": "The data type is wrong"})

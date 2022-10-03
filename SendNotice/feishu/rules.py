@@ -23,7 +23,7 @@ class alertRule:
                 return True
 
     def resolved_rule(self, current_alertname, current_eventid):
-        eventid = Eventlist.query.filter(Eventlist.alertname == current_alertname).filter(Eventlist.eventid == current_eventid).first()
+        eventid = Eventlist.query.filter(Eventlist.status != '恢复').filter(Eventlist.alertname == current_alertname).filter(Eventlist.eventid == current_eventid).first()
         if eventid:
             return True
         else:
